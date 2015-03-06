@@ -28,7 +28,7 @@ Convert relative links into absolute ones automatically.
 
 ##### `fencing`
 
-The western art of combat with [rapiers][2] or rapier-like swords. It can also be set to `true` to use fences like _(\`\`\`)_ instead of spaces _(\ \ \ \ )_ when delimiting code blocks.
+The western art of combat with [rapiers][2] or rapier-like swords. It can also be set to `true` to use fences like _(\`\`\`)_ instead of spaces _(    )_ when delimiting code blocks.
 
 ##### `fencinglanguage`
 
