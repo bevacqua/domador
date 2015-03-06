@@ -2,7 +2,7 @@
 
 > Dependency-free and lean DOM parser that outputs Markdown
 
-You can use it on the server-side as well, thanks to [jsdom][1]. The client-side version leverages the browser DOM.
+You can use it on the server-side as well, thanks to [jsdom][1]. The client-side version leverages the browser DOM. Originally based on [html-md][3]
 
 # Install
 
@@ -57,3 +57,4 @@ MIT
 
 [1]: https://github.com/tmpvar/jsdom
 [2]: http://en.wikipedia.org/wiki/Rapier
+[3]: https://github.com/neocotic/html.md
