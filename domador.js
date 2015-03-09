@@ -30,6 +30,7 @@ var replacers = Object.keys(replacements).reduce(replacer, {});
 var rspaces = /^\s+|\s+$/g;
 var rdisplay = /(display|visibility)\s*:\s*[a-z]+/gi;
 var rhidden = /(none|hidden)\s*$/i;
+var rheading = /^H([1-6])$/;
 var shallowTags = [
   'APPLET', 'AREA', 'AUDIO', 'BUTTON', 'CANVAS', 'DATALIST', 'EMBED', 'HEAD', 'INPUT', 'MAP',
   'MENU', 'METER', 'NOFRAMES', 'NOSCRIPT', 'OBJECT', 'OPTGROUP', 'OPTION', 'PARAM', 'PROGRESS',
@@ -74,6 +75,7 @@ function has (el, prop, direct) {
   }
   return el.hasAttribute(prop);
 }
+
 function isVisible (el) {
   var display;
   var i;
@@ -102,17 +104,24 @@ function isVisible (el) {
   return visible;
 }
 
-function nonPreProcess (text) {
+function processPlainText (text, tagName) {
+  var key;
+  var block = paragraphTags.indexOf(tagName) !== -1 || tagName === 'BLOCKQUOTE';
   text = text.replace(/\n([ \t]*\n)+/g, '\n');
   text = text.replace(/\n[ \t]+/g, '\n');
   text = text.replace(/[ \t]+/g, ' ');
-  for (var key in replacements) {
+  for (key in replacements) {
     text = text.replace(replacers[key], replacements[key]);
   }
+  text = text.replace(/(\s*)\\#/g, block ? removeUnnecessaryEscapes : '$1#');
   return text;
+
+  function removeUnnecessaryEscapes (escaped, spaces, i) {
+    return i ? spaces + '#' : escaped;
+  }
 }
 
-function inCodeProcess (text) {
+function processCode (text) {
   return text.replace(/`/g, '\\`');
 }
 
@@ -125,7 +134,7 @@ function parse (html, options) {
 function Domador (html, options) {
   this.html = html != null ? html : '';
   this.options = options || {};
-  this.atLeft = this.atNoWS = this.atP = true;
+  this.atLeft = this.noTrailingWhitespace = this.atP = true;
   this.buffer = '';
   this.exceptions = [];
   this.order = 1;
@@ -139,6 +148,7 @@ function Domador (html, options) {
   if (this.options.absolute === void 0) { this.options.absolute = false; }
   if (this.options.fencing === void 0) { this.options.fencing = false; }
   if (this.options.fencinglanguage === void 0) { this.options.fencinglanguage = noop; }
+  if (this.options.transform === void 0) { this.options.transform = noop; }
 }
 
 Domador.prototype.append = function (text) {
@@ -150,7 +160,7 @@ Domador.prototype.append = function (text) {
 
 Domador.prototype.br = function () {
   this.append('  ' +  this.left);
-  return this.atLeft = this.atNoWS = true;
+  return this.atLeft = this.noTrailingWhitespace = true;
 };
 
 Domador.prototype.code = function () {
@@ -195,14 +205,14 @@ Domador.prototype.output = function (text) {
     return;
   }
   if (!this.inPre) {
-    text = this.atNoWS ? text.replace(/^[ \t\n]+/, '') : /^[ \t]*\n/.test(text) ? text.replace(/^[ \t\n]+/, '\n') : text.replace(/^[ \t]+/, ' ');
+    text = this.noTrailingWhitespace ? text.replace(/^[ \t\n]+/, '') : /^[ \t]*\n/.test(text) ? text.replace(/^[ \t\n]+/, '\n') : text.replace(/^[ \t]+/, ' ');
   }
   if (text === '') {
     return;
   }
   this.atP = /\n\n$/.test(text);
   this.atLeft = /\n$/.test(text);
-  this.atNoWS = /[ \t\n]$/.test(text);
+  this.noTrailingWhitespace = /[ \t\n]$/.test(text);
   return this.append(text.replace(/\n/g, this.left));
 };
 
@@ -214,7 +224,7 @@ Domador.prototype.outputLater = function (text) {
   })(this);
 };
 
-Domador.prototype.p = function (lonely) {
+Domador.prototype.p = function () {
   if (this.atP) {
     return;
   }
@@ -227,7 +237,7 @@ Domador.prototype.p = function (lonely) {
     this.append(this.left);
     this.atLeft = true;
   }
-  return this.atNoWS = this.atP = true;
+  return this.noTrailingWhitespace = this.atP = true;
 };
 
 Domador.prototype.parse = function () {
@@ -242,17 +252,22 @@ Domador.prototype.parse = function () {
   if (typeof this.html === 'string') {
     container = windowContext.document.createElement('div');
     container.innerHTML = this.html;
-    this.process(container);
   } else {
-    this.process(this.html.parentElement);
+    container = this.html;
   }
+  this.process(container);
   if (this.links.length) {
-    this.append('\n\n');
+    while (this.lastElement.parentElement !== container && this.lastElement.tagName !== 'BLOCKQUOTE') {
+      this.lastElement = this.lastElement.parentElement;
+    }
+    if (this.lastElement.tagName !== 'BLOCKQUOTE') {
+      this.append('\n\n');
+    }
     ref = this.links;
     for (i = 0; i < ref.length; i++) {
       link = ref[i];
       if (link) {
-        this.append('[' + i + ']: ' + link + '\n');
+        this.append('[' + (i + 1) + ']: ' + link + '\n');
       }
     }
   }
@@ -271,179 +286,212 @@ Domador.prototype.pre = function () {
   })(this);
 };
 
+Domador.prototype.htmlTag = function (type) {
+  this.output('<' + type + '>');
+  return this.outputLater('</' + type + '>');
+};
+
 Domador.prototype.process = function (el) {
   var after;
   var after1;
   var after2;
   var base;
-  var childNode;
   var href;
   var i;
   var ref;
-  var ref1;
-  var skipChildren;
   var src;
   var suffix;
   var summary;
   var title;
+  var transformed;
+
   if (!isVisible(el)) {
     return;
   }
-  if (el.nodeType === windowContext.Node.ELEMENT_NODE) {
-    skipChildren = false;
-    try {
-      if (shallowTags.indexOf(el.tagName) !== -1) {
-        skipChildren = true;
-      } else if (/^H[1-6]$/.test(el.tagName)) {
-        this.p();
-        this.output(many('#', parseInt(el.tagName.match(/([1-6])$/)[1])) + ' ');
-      } else if (paragraphTags.indexOf(el.tagName) !== -1) {
-        this.p();
-      } else {
-        switch (el.tagName) {
-          case 'BODY':
-          case 'FORM':
-            break;
-          case 'DETAILS':
-            this.p();
-            if (!has(el, 'open', false)) {
-              skipChildren = true;
-              summary = el.getElementsByTagName('summary')[0];
-              if (summary) {
-                this.process(summary);
-              }
-            }
-            break;
-          case 'BR':
-            this.br();
-            break;
-          case 'HR':
-            this.p();
-            this.output('---------');
-            this.p();
-            break;
-          case 'CITE':
-          case 'DFN':
-          case 'EM':
-          case 'I':
-          case 'U':
-          case 'VAR':
-            this.output('_');
-            this.atNoWS = true;
-            after = this.outputLater('_');
-            break;
-          case 'DT':
-          case 'B':
-          case 'STRONG':
-            if (el.tagName === 'DT') {
-              this.p();
-            }
-            this.output('**');
-            this.atNoWS = true;
-            after = this.outputLater('**');
-            break;
-          case 'Q':
-            this.output('"');
-            this.atNoWS = true;
-            after = this.outputLater('"');
-            break;
-          case 'OL':
-            after = this.ol();
-            break;
-          case 'UL':
-            after = this.ul();
-            break;
-          case 'LI':
-            this.replaceLeft('\n');
-            this.li();
-            break;
-          case 'PRE':
-            el.className.split(/\s+/)
-            if (this.options.fencing) {
-              this.append('\n\n');
-              this.output(['```', '\n'].join(this.options.fencinglanguage(el) || ''));
-              after1 = this.pre();
-              after2 = this.outputLater('\n```');
-            } else {
-              after1 = this.pushLeft('    ');
-              after2 = this.pre();
-            }
-            after = function() {
-              after1();
-              return after2();
-            };
-            break;
-          case 'CODE':
-          case 'KBD':
-          case 'SAMP':
-            if (this.inPre) {
-              break;
-            }
-            this.output('`');
-            after1 = this.code();
-            after2 = this.outputLater('`');
-            after = function() {
-              after1();
-              return after2();
-            };
-            break;
-          case 'BLOCKQUOTE':
-          case 'DD':
-            this.startingBlockquote = true;
-            after = this.pushLeft('> ');
-            this.startingBlockquote = false;
-            break;
-          case 'A':
-            href = attr(el, 'href', this.options.absolute);
-            if (!href) {
-              break;
-            }
-            title = attr(el, 'title');
-            if (title) {
-              href += ' "' + title + '"';
-            }
-            suffix = this.options.inline ? '(' + href + ')' : '[' + ((base = this.linkMap)[href] != null ? base[href] : base[href] = this.links.push(href) - 1) + ']';
-            this.output('[');
-            this.atNoWS = true;
-            after = this.outputLater(']' + suffix);
-            break;
-          case 'IMG':
-            skipChildren = true;
-            src = attr(el, 'src', this.options.absolute);
-            if (!src) {
-              break;
-            }
-            this.output('![' + (attr(el, 'alt')) + '](' + src + ')');
-            break;
-          case 'FRAME':
-          case 'IFRAME':
-            skipChildren = true;
-            try {
-              if ((ref = el.contentDocument) != null ? ref.documentElement : void 0) {
-                this.process(el.contentDocument.documentElement);
-              }
-            } catch (err) {
-            }
-            break;
-          case 'TR':
-            after = this.p;
-            break;
+
+  if (el.nodeType === windowContext.Node.TEXT_NODE) {
+    if (el.nodeValue.replace(/\n/g, '').length === 0) {
+      return;
+    }
+    if (this.inPre) {
+      return this.output(el.nodeValue);
+    }
+    if (this.inCode) {
+      return this.output(processCode(el.nodeValue));
+    }
+    return this.output(processPlainText(el.nodeValue, el.parentElement.tagName));
+  }
+
+  if (el.nodeType !== windowContext.Node.ELEMENT_NODE) {
+    return;
+  }
+
+  this.lastElement = el;
+
+  var transformed = this.options.transform(el);
+  if (transformed !== void 0) {
+    return this.output(transformed);
+  }
+  if (shallowTags.indexOf(el.tagName) !== -1) {
+    return;
+  }
+
+  switch (el.tagName) {
+    case 'H1':
+    case 'H2':
+    case 'H3':
+    case 'H4':
+    case 'H5':
+    case 'H6':
+      this.p();
+      this.output(many('#', parseInt(el.tagName.match(rheading)[1])) + ' ');
+      break;
+    case 'ADDRESS':
+    case 'ARTICLE':
+    case 'ASIDE':
+    case 'DIV':
+    case 'FIELDSET':
+    case 'FOOTER':
+    case 'HEADER':
+    case 'NAV':
+    case 'P':
+    case 'SECTION':
+      this.p();
+      break;
+    case 'BODY':
+    case 'FORM':
+      break;
+    case 'DETAILS':
+      this.p();
+      if (!has(el, 'open', false)) {
+        summary = el.getElementsByTagName('summary')[0];
+        if (summary) {
+          this.process(summary);
         }
+        return;
       }
-    } catch (err) {
-    }
-    if (!skipChildren) {
-      ref1 = el.childNodes;
-      for (i = 0; i < ref1.length; i++) {
-        childNode = ref1[i];
-        this.process(childNode);
+      break;
+    case 'BR':
+      this.br();
+      break;
+    case 'HR':
+      this.p();
+      this.output('---------');
+      this.p();
+      break;
+    case 'CITE':
+    case 'DFN':
+    case 'EM':
+    case 'I':
+    case 'U':
+    case 'VAR':
+      this.output('_');
+      this.noTrailingWhitespace = true;
+      after = this.outputLater('_');
+      break;
+    case 'DT':
+    case 'B':
+    case 'STRONG':
+      if (el.tagName === 'DT') {
+        this.p();
       }
-    }
-    if (after) {
-      return after.call(this);
-    }
-  } else if (el.nodeType === windowContext.Node.TEXT_NODE) {
-    return this.output(this.inPre ? el.nodeValue : this.inCode ? inCodeProcess(el.nodeValue) : nonPreProcess(el.nodeValue));
+      this.output('**');
+      this.noTrailingWhitespace = true;
+      after = this.outputLater('**');
+      break;
+    case 'Q':
+      this.output('"');
+      this.noTrailingWhitespace = true;
+      after = this.outputLater('"');
+      break;
+    case 'OL':
+      after = this.ol();
+      break;
+    case 'UL':
+      after = this.ul();
+      break;
+    case 'LI':
+      this.replaceLeft('\n');
+      this.li();
+      break;
+    case 'PRE':
+      if (this.options.fencing) {
+        this.append('\n\n');
+        this.output(['```', '\n'].join(this.options.fencinglanguage(el) || ''));
+        after1 = this.pre();
+        after2 = this.outputLater('\n```');
+      } else {
+        after1 = this.pushLeft('    ');
+        after2 = this.pre();
+      }
+      after = function() {
+        after1();
+        return after2();
+      };
+      break;
+    case 'CODE':
+    case 'SAMP':
+      if (this.inPre) {
+        break;
+      }
+      this.output('`');
+      after1 = this.code();
+      after2 = this.outputLater('`');
+      after = function() {
+        after1();
+        return after2();
+      };
+      break;
+    case 'BLOCKQUOTE':
+    case 'DD':
+      this.startingBlockquote = true;
+      after = this.pushLeft('> ');
+      this.startingBlockquote = false;
+      break;
+    case 'KBD':
+      after = this.htmlTag('kbd');
+      break;
+    case 'A':
+      href = attr(el, 'href', this.options.absolute);
+      if (!href) {
+        break;
+      }
+      title = attr(el, 'title');
+      if (title) {
+        href += ' "' + title + '"';
+      }
+      suffix = this.options.inline ? '(' + href + ')' : '[' + ((base = this.linkMap)[href] != null ? base[href] : base[href] = this.links.push(href)) + ']';
+      this.output('[');
+      this.noTrailingWhitespace = true;
+      after = this.outputLater(']' + suffix);
+      break;
+    case 'IMG':
+      src = attr(el, 'src', this.options.absolute);
+      if (!src) {
+        break;
+      }
+      this.output('![' + (attr(el, 'alt')) + '](' + src + ')');
+      return;
+    case 'FRAME':
+    case 'IFRAME':
+      try {
+        if ((ref = el.contentDocument) != null ? ref.documentElement : void 0) {
+          this.process(el.contentDocument.documentElement);
+        }
+      } catch (err) {
+      }
+      return;
+    case 'TR':
+      after = this.p;
+      break;
+  }
+
+  for (i = 0; i < el.childNodes.length; i++) {
+    this.process(el.childNodes[i]);
+  }
+
+  if (after) {
+    return after.call(this);
   }
 };
 
@@ -468,7 +516,7 @@ Domador.prototype.pushLeft = function (text) {
 Domador.prototype.replaceLeft = function (text) {
   if (!this.atLeft) {
     this.append(this.left.replace(/[ ]{2,4}$/, text));
-    return this.atLeft = this.atNoWS = this.atP = true;
+    return this.atLeft = this.noTrailingWhitespace = this.atP = true;
   } else if (this.last) {
     return this.last = this.last.replace(/[ ]{2,4}$/, text);
   }

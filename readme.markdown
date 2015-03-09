@@ -45,7 +45,27 @@ function fencinglanguage (el) {
 }
 ```
 
-Read the unit tests for examples of expected output and their inputs.
+##### `transform`
+
+Allows you to take over the default transformation for any given DOM element. Ignore elements you don't want to override, and return Markdown for the ones you want to change. This method is executed on every single DOM element that's parsed by `domador`. The example below converts links that start with `@` into mentions like `@bevacqua` instead of traditional Markdown links like `[@bevacqua](/users/bevacqua)`. This is particularly useful to transform Markdown-generated HTML back into the original Markdown when your Markdown parser has special tokenizers or hooks.
+
+```js
+domador(el, {
+  transform: function (el) {
+    if (el.tagName === 'A' && el.innerHTML[0] === '@') {
+      return el.innerHTML;
+    }
+  }
+});
+```
+
+# Tests
+
+Read the unit tests for examples of expected output and their inputs. Run unit tests using the command below.
+
+```shell
+npm test
+```
 
 #### Disclaimer
 

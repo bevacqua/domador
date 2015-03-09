@@ -1,3 +1,10 @@
+# v1.1.0 Reliable Apparatus
+
+- Fixed an eager escaping bug where every single `#` character would be escaped
+- Removed extra line breaks that would occur before link reference footnotes
+- Link references now start at `[1]` instead of `[0]`
+- Introduced an API method that allows to transform any part of the DOM tree using a custom handler
+
 # v1.0.0 IPO
 
 - Initial Public Release
