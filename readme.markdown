@@ -26,6 +26,10 @@ Converts DOM tree _(or HTML string)_ `input` into Markdown. `domador` takes the 
 
 Convert relative links into absolute ones automatically.
 
+##### `inline`
+
+Links are inlined `[foo](/bar)`. By default, they are added as footnote references `[foo][1]\n\n[1]: /bar`.
+
 ##### `fencing`
 
 The western art of combat with [rapiers][2] or rapier-like swords. It can also be set to `true` to use fences like instead of spaces when delimiting code blocks.

@@ -8,7 +8,7 @@ function read (file) {
   return fs.readFileSync('./test/fixtures/' + file, 'utf8').trim();
 }
 
-function write (file, data) {
+function write (file, data) { /* jshint ignore:line */
   return fs.writeFileSync('./test/fixtures/' + file, data + '\n', 'utf8');
 }
 
@@ -89,6 +89,9 @@ test('by default, domador just linkifies', function (t) {
   t.equal(domador([
     '<p>Hey <a href="/users/bevacqua">@bevacqua</a> that\'s a nice thought.</p>'
   ].join('')), 'Hey [@bevacqua][1] that\'s a nice thought.\n\n[1]: /users/bevacqua');
+  t.equal(domador([
+    '<p>Hey <a href="/users/bevacqua">@bevacqua</a> that\'s a nice thought.</p>'
+  ].join(''), {inline: true}), 'Hey [@bevacqua](/users/bevacqua) that\'s a nice thought.');
   t.end();
 });
 

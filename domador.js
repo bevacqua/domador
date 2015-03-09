@@ -303,7 +303,6 @@ Domador.prototype.process = function (el) {
   var suffix;
   var summary;
   var title;
-  var transformed;
 
   if (!isVisible(el)) {
     return;

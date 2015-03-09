@@ -1,0 +1,10 @@
+{
+  "name": "domador",
+  "version": "1.1.0",
+  "description": "Dependency-free and lean DOM parser that outputs Markdown",
+  "homepage": "https://github.com/bevacqua/domador",
+  "authors": [
+    "Nicolas Bevacqua <nicolasbevacqua@gmail.com>"
+  ],
+  "license": "MIT"
+}
