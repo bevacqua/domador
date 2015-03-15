@@ -1,6 +1,6 @@
 {
   "name": "domador",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Dependency-free and lean DOM parser that outputs Markdown",
   "main": "domador.js",
   "scripts": {
@@ -29,7 +29,7 @@
     "uglify-js": "^2.4.16",
     "watchify": "^2.2.1"
   },
-  "dependencies": {
+  "optionalDependencies": {
     "jsdom": "^3.1.2"
   }
 }

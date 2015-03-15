@@ -1,3 +1,7 @@
+# v1.1.1 Dependency Optional
+
+- Moved `jsdom` into `optionalDependencies`
+
 # v1.1.0 Reliable Apparatus
 
 - Fixed an eager escaping bug where every single `#` character would be escaped
