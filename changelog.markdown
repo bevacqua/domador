@@ -1,4 +1,4 @@
-# v1.1.1 Dependency Optional
+# v1.1.2 Dependency Optional
 
 - Moved `jsdom` into `optionalDependencies`
 
