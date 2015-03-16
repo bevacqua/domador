@@ -1,4 +1,4 @@
-# v1.1.3 Ping Pong
+# v1.1.4 Ping Pong
 
 - Shim `Node` to play well with IE < 9
 

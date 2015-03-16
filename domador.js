@@ -318,7 +318,7 @@ Domador.prototype.process = function (el) {
     if (this.inCode) {
       return this.output(processCode(el.nodeValue));
     }
-    return this.output(processPlainText(el.nodeValue, el.parentElement.tagName));
+    return this.output(processPlainText(el.nodeValue, el.parentElement && el.parentElement.tagName));
   }
 
   if (el.nodeType !== windowContext.Node.ELEMENT_NODE) {
