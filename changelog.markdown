@@ -1,3 +1,7 @@
+# v1.1.3 Ping Pong
+
+- Shim `Node` to play well with IE < 9
+
 # v1.1.2 Dependency Optional
 
 - Moved `jsdom` into `optionalDependencies`
