@@ -1,3 +1,8 @@
+# v1.2.0 Check Mate
+
+- Merged `<a>` logic with `<img>` logic for consistency.
+- Image tags are now added as footnote references by default
+
 # v1.1.4 Ping Pong
 
 - Shim `Node` to play well with IE < 9

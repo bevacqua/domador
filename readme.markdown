@@ -28,7 +28,7 @@ Convert relative links into absolute ones automatically.
 
 ##### `inline`
 
-Links are inlined `[foo](/bar)`. By default, they are added as footnote references `[foo][1]\n\n[1]: /bar`.
+Links _(`[foo](/bar)`)_ and image sources _(`![foo](/bar)`)_ are inlined. By default, they are added as footnote references `[foo][1]\n\n[1]: /bar`.
 
 ##### `fencing`
 

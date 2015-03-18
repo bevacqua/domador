@@ -299,7 +299,6 @@ Domador.prototype.process = function (el) {
   var href;
   var i;
   var ref;
-  var src;
   var suffix;
   var summary;
   var title;
@@ -451,7 +450,8 @@ Domador.prototype.process = function (el) {
       after = this.htmlTag('kbd');
       break;
     case 'A':
-      href = attr(el, 'href', this.options.absolute);
+    case 'IMG':
+      href = attr(el, el.tagName === 'A' ? 'href' : 'src', this.options.absolute);
       if (!href) {
         break;
       }
@@ -459,18 +459,19 @@ Domador.prototype.process = function (el) {
       if (title) {
         href += ' "' + title + '"';
       }
-      suffix = this.options.inline ? '(' + href + ')' : '[' + ((base = this.linkMap)[href] != null ? base[href] : base[href] = this.links.push(href)) + ']';
+      if (this.options.inline) {
+        suffix = '(' + href + ')';
+      } else {
+        suffix = '[' + ((base = this.linkMap)[href] != null ? base[href] : base[href] = this.links.push(href)) + ']';
+      }
+      if (el.tagName === 'IMG') {
+        this.output('![' + attr(el, 'alt') + ']' + suffix);
+        return;
+      }
       this.output('[');
       this.noTrailingWhitespace = true;
       after = this.outputLater(']' + suffix);
       break;
-    case 'IMG':
-      src = attr(el, 'src', this.options.absolute);
-      if (!src) {
-        break;
-      }
-      this.output('![' + (attr(el, 'alt')) + '](' + src + ')');
-      return;
     case 'FRAME':
     case 'IFRAME':
       try {
