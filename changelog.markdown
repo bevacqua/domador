@@ -1,3 +1,7 @@
+# v2.0.0 Check Mate
+
+- Updated `jsdom` to latest
+
 # v1.2.0 Check Mate
 
 - Merged `<a>` logic with `<img>` logic for consistency.
