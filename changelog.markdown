@@ -1,6 +1,10 @@
-# v2.0.0 Check Mate
+# v2.0.0 Check Sum
 
 - Updated `jsdom` to latest
+
+# v1.2.1 Fanfare
+
+- Moved `jsdom` to hard `dependencies`
 
 # v1.2.0 Check Mate
 

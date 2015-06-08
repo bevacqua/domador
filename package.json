@@ -1,6 +1,6 @@
 {
   "name": "domador",
-  "version": "2.0.0",
+  "version": "1.2.0",
   "description": "Dependency-free and lean DOM parser that outputs Markdown",
   "main": "domador.js",
   "scripts": {
@@ -22,14 +22,14 @@
     "./virtualWindowContext.js": "./windowContext.js"
   },
   "homepage": "https://github.com/bevacqua/domador",
+  "dependencies": {
+    "jsdom": "3.1.2"
+  },
   "devDependencies": {
     "browserify": "^8.1.0",
     "jshint": "^2.5.11",
     "tape": "^3.5.0",
     "uglify-js": "^2.4.16",
     "watchify": "^2.2.1"
-  },
-  "optionalDependencies": {
-    "jsdom": "5.4.3"
   }
 }
