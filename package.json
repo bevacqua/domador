@@ -1,6 +1,6 @@
 {
   "name": "domador",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "description": "Dependency-free and lean DOM parser that outputs Markdown",
   "main": "domador.js",
   "scripts": {
@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/bevacqua/domador",
   "dependencies": {
-    "jsdom": "3.1.2"
+    "jsdom": "5.4.3"
   },
   "devDependencies": {
     "browserify": "^8.1.0",
