@@ -1,3 +1,7 @@
+# v2.1.0 Bootleg
+
+- Moved `jsdom` to hard `dependencies`
+
 # v2.0.0 Check Sum
 
 - Updated `jsdom` to latest
