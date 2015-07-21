@@ -1,4 +1,4 @@
-# v2.1.1 Mark
+# v2.1.2 Mark
 
 - Added support for `<mark>` tags
 - Updated `jsdom@5.6.1`
