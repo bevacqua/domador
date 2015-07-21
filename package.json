@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/bevacqua/domador",
   "dependencies": {
-    "jsdom": "5.4.3"
+    "jsdom": "5.6.1"
   },
   "devDependencies": {
     "browserify": "^8.1.0",

@@ -387,6 +387,10 @@ Domador.prototype.process = function (el) {
       this.noTrailingWhitespace = true;
       after = this.outputLater('_');
       break;
+    case 'MARK':
+      this.output('<mark>');
+      after = this.outputLater('</mark>');
+      break;
     case 'DT':
     case 'B':
     case 'STRONG':

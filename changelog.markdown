@@ -1,3 +1,8 @@
+# v2.1.1 Mark
+
+- Added support for `<mark>` tags
+- Updated `jsdom@5.6.1`
+
 # v2.1.0 Bootleg
 
 - Moved `jsdom` to hard `dependencies`

@@ -22,6 +22,13 @@ test('domador parses basic HTMl strings', function (t) {
   t.end();
 });
 
+test('domador gets <mark> right', function (t) {
+  t.equal(domador('<mark>foo</mark>'), '<mark>foo</mark>');
+  t.equal(domador('<mark>foo bar baz</mark>'), '<mark>foo bar baz</mark>');
+  t.equal(domador('<mark>foo <em>bar baz</em> </mark>'), '<mark>foo _bar baz_ </mark>');
+  t.end();
+});
+
 test('domador gets blockquotes right', function (t) {
   t.equal(domador('<blockquote>bar</blockquote>'), '> bar');
   t.equal(domador('<blockquote><p>bar</p></blockquote>'), '> bar');
