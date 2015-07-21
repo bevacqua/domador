@@ -1,6 +1,6 @@
 {
   "name": "domador",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Dependency-free and lean DOM parser that outputs Markdown",
   "main": "domador.js",
   "scripts": {
