@@ -1,3 +1,8 @@
+# v2.1.3 Murky
+
+- Added support for server-side document-relative urls
+- Updated `jsdom@8.0.2`
+
 # v2.1.2 Mark
 
 - Added support for `<mark>` tags

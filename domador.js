@@ -76,34 +76,6 @@ function has (el, prop, direct) {
   return el.hasAttribute(prop);
 }
 
-function isVisible (el) {
-  var display;
-  var i;
-  var property;
-  var visibility;
-  var visible = true;
-  var style = attr(el, 'style', false);
-  var properties = style != null ? typeof style.match === 'function' ? style.match(rdisplay) : void 0 : void 0;
-  if (properties != null) {
-    for (i = 0; i < properties.length; i++) {
-      property = properties[i];
-      visible = !rhidden.test(property);
-    }
-  }
-  if (visible && typeof windowContext.getComputedStyle === 'function') {
-    try {
-      style = windowContext.getComputedStyle(el, null);
-      if (typeof (style != null ? style.getPropertyValue : void 0) === 'function') {
-        display = style.getPropertyValue('display');
-        visibility = style.getPropertyValue('visibility');
-        visible = display !== 'none' && visibility !== 'hidden';
-      }
-    } catch (err) {
-    }
-  }
-  return visible;
-}
-
 function processPlainText (text, tagName) {
   var key;
   var block = paragraphTags.indexOf(tagName) !== -1 || tagName === 'BLOCKQUOTE';
@@ -134,6 +106,7 @@ function parse (html, options) {
 function Domador (html, options) {
   this.html = html != null ? html : '';
   this.options = options || {};
+  this.windowContext = windowContext(this.options);
   this.atLeft = this.noTrailingWhitespace = this.atP = true;
   this.buffer = '';
   this.exceptions = [];
@@ -151,19 +124,19 @@ function Domador (html, options) {
   if (this.options.transform === void 0) { this.options.transform = noop; }
 }
 
-Domador.prototype.append = function (text) {
+Domador.prototype.append = function append (text) {
   if (this.last != null) {
     this.buffer += this.last;
   }
   return this.last = text;
 };
 
-Domador.prototype.br = function () {
+Domador.prototype.br = function br () {
   this.append('  ' +  this.left);
   return this.atLeft = this.noTrailingWhitespace = true;
 };
 
-Domador.prototype.code = function () {
+Domador.prototype.code = function code () {
   var old;
   old = this.inCode;
   this.inCode = true;
@@ -174,14 +147,14 @@ Domador.prototype.code = function () {
   })(this);
 };
 
-Domador.prototype.li = function () {
+Domador.prototype.li = function li () {
   var result;
   result = this.inOrderedList ? (this.order++) + '. ' : '* ';
   result = padLeft(result, (this.listDepth - 1) * 2);
   return this.append(result);
 };
 
-Domador.prototype.ol = function () {
+Domador.prototype.ol = function ol () {
   var inOrderedList, order;
   if (this.listDepth === 0) {
     this.p();
@@ -200,7 +173,26 @@ Domador.prototype.ol = function () {
   })(this);
 };
 
-Domador.prototype.output = function (text) {
+Domador.prototype.ul = function ul () {
+  var inOrderedList, order;
+  if (this.listDepth === 0) {
+    this.p();
+  }
+  inOrderedList = this.inOrderedList;
+  order = this.order;
+  this.inOrderedList = false;
+  this.order = 1;
+  this.listDepth++;
+  return (function(_this) {
+    return function() {
+      _this.inOrderedList = inOrderedList;
+      _this.order = order;
+      return _this.listDepth--;
+    };
+  })(this);
+};
+
+Domador.prototype.output = function output (text) {
   if (!text) {
     return;
   }
@@ -216,7 +208,7 @@ Domador.prototype.output = function (text) {
   return this.append(text.replace(/\n/g, this.left));
 };
 
-Domador.prototype.outputLater = function (text) {
+Domador.prototype.outputLater = function outputLater (text) {
   return (function(self) {
     return function () {
       return self.output(text);
@@ -224,7 +216,7 @@ Domador.prototype.outputLater = function (text) {
   })(this);
 };
 
-Domador.prototype.p = function () {
+Domador.prototype.p = function p () {
   if (this.atP) {
     return;
   }
@@ -240,7 +232,7 @@ Domador.prototype.p = function () {
   return this.noTrailingWhitespace = this.atP = true;
 };
 
-Domador.prototype.parse = function () {
+Domador.prototype.parse = function parse () {
   var container;
   var i;
   var link;
@@ -250,7 +242,7 @@ Domador.prototype.parse = function () {
     return this.buffer;
   }
   if (typeof this.html === 'string') {
-    container = windowContext.document.createElement('div');
+    container = this.windowContext.document.createElement('div');
     container.innerHTML = this.html;
   } else {
     container = this.html;
@@ -275,7 +267,7 @@ Domador.prototype.parse = function () {
   return this.buffer = trim(this.buffer);
 };
 
-Domador.prototype.pre = function () {
+Domador.prototype.pre = function pre () {
   var old;
   old = this.inPre;
   this.inPre = true;
@@ -286,12 +278,12 @@ Domador.prototype.pre = function () {
   })(this);
 };
 
-Domador.prototype.htmlTag = function (type) {
+Domador.prototype.htmlTag = function htmlTag (type) {
   this.output('<' + type + '>');
   return this.outputLater('</' + type + '>');
 };
 
-Domador.prototype.process = function (el) {
+Domador.prototype.process = function process (el) {
   var after;
   var after1;
   var after2;
@@ -303,11 +295,11 @@ Domador.prototype.process = function (el) {
   var summary;
   var title;
 
-  if (!isVisible(el)) {
+  if (!this.isVisible(el)) {
     return;
   }
 
-  if (el.nodeType === windowContext.Node.TEXT_NODE) {
+  if (el.nodeType === this.windowContext.Node.TEXT_NODE) {
     if (el.nodeValue.replace(/\n/g, '').length === 0) {
       return;
     }
@@ -320,7 +312,7 @@ Domador.prototype.process = function (el) {
     return this.output(processPlainText(el.nodeValue, el.parentElement && el.parentElement.tagName));
   }
 
-  if (el.nodeType !== windowContext.Node.ELEMENT_NODE) {
+  if (el.nodeType !== this.windowContext.Node.ELEMENT_NODE) {
     return;
   }
 
@@ -499,7 +491,7 @@ Domador.prototype.process = function (el) {
   }
 };
 
-Domador.prototype.pushLeft = function (text) {
+Domador.prototype.pushLeft = function pushLeft (text) {
   var old;
   old = this.left;
   this.left += text;
@@ -517,7 +509,7 @@ Domador.prototype.pushLeft = function (text) {
   })(this);
 };
 
-Domador.prototype.replaceLeft = function (text) {
+Domador.prototype.replaceLeft = function replaceLeft (text) {
   if (!this.atLeft) {
     this.append(this.left.replace(/[ ]{2,4}$/, text));
     return this.atLeft = this.noTrailingWhitespace = this.atP = true;
@@ -526,23 +518,32 @@ Domador.prototype.replaceLeft = function (text) {
   }
 };
 
-Domador.prototype.ul = function () {
-  var inOrderedList, order;
-  if (this.listDepth === 0) {
-    this.p();
+Domador.prototype.isVisible = function isVisible (el) {
+  var display;
+  var i;
+  var property;
+  var visibility;
+  var visible = true;
+  var style = attr(el, 'style', false);
+  var properties = style != null ? typeof style.match === 'function' ? style.match(rdisplay) : void 0 : void 0;
+  if (properties != null) {
+    for (i = 0; i < properties.length; i++) {
+      property = properties[i];
+      visible = !rhidden.test(property);
+    }
   }
-  inOrderedList = this.inOrderedList;
-  order = this.order;
-  this.inOrderedList = false;
-  this.order = 1;
-  this.listDepth++;
-  return (function(_this) {
-    return function() {
-      _this.inOrderedList = inOrderedList;
-      _this.order = order;
-      return _this.listDepth--;
-    };
-  })(this);
+  if (visible && typeof this.windowContext.getComputedStyle === 'function') {
+    try {
+      style = this.windowContext.getComputedStyle(el, null);
+      if (typeof (style != null ? style.getPropertyValue : void 0) === 'function') {
+        display = style.getPropertyValue('display');
+        visibility = style.getPropertyValue('visibility');
+        visible = display !== 'none' && visibility !== 'hidden';
+      }
+    } catch (err) {
+    }
+  }
+  return visible;
 };
 
 module.exports = parse;

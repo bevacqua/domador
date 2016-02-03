@@ -114,3 +114,10 @@ test('if asked nicely, domador will do anything for you', function (t) {
   }), 'Hey @bevacqua that\'s a nice thought.');
   t.end();
 });
+
+test('about absolute href', function (t) {
+  t.equal(domador('<a href="/foo">foo</a>', { absolute: true }), '[foo][1]\n\n[1]: /foo');
+  t.equal(domador('<a href="/foo">foo</a>', { absolute: true, href: 'https://google.com/s/' }), '[foo][1]\n\n[1]: https://google.com/foo');
+  t.equal(domador('<a href="foo">foo</a>', { absolute: true, href: 'https://google.com/s/' }), '[foo][1]\n\n[1]: https://google.com/s/foo');
+  t.end();
+})

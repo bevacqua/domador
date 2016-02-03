@@ -26,6 +26,10 @@ Converts DOM tree _(or HTML string)_ `input` into Markdown. `domador` takes the 
 
 Convert relative links into absolute ones automatically.
 
+##### `href`
+
+The document's `href`, necessary for the `absolute` option to work properly outside of a browser environment.
+
 ##### `inline`
 
 Links _(`[foo](/bar)`)_ and image sources _(`![foo](/bar)`)_ are inlined. By default, they are added as footnote references `[foo][1]\n\n[1]: /bar`.
