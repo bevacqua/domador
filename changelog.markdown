@@ -1,3 +1,7 @@
+# v2.3.0 Pin Market
+
+- Introduced support for `markers`, helpful in a variety of cases
+
 # v2.2.1 Suspicious Clown
 
 - Fixed a bug in client-side implementation of `<table>` support

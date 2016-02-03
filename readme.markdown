@@ -85,6 +85,19 @@ domador(el, {
 });
 ```
 
+##### `markers`
+
+*Advanced option.* Setting markers to an array such as `[[0, 'START'], [10, 'END']]` will place each of those markers in the output, based on the input index you want to track. This feature is necessary because there is no other reliable way of tracking a text cursor position before and after a piece of HTML is converted to Markdown.
+
+The following example shows how `markers` could be used to preserve a text selection across HTML-into-Markdown parsing, by providing `markers` for each cursor. When the output from `domador` comes back, all you need to do is find your markers, remove them, and place the text selection at their indices. The [`woofmark`][4] _Markdown/HTML/WYSIWYG_ editor module leverages this functionality to do exactly that.
+
+```js
+domador('<strong>foo</strong>', {
+  markers: [[6, '[START]'], [10, '[END]']]
+});
+// <- '**[START]fo[END]o**'
+```
+
 # Tests
 
 Read the unit tests for examples of expected output and their inputs. Run unit tests using the command below.
@@ -104,3 +117,4 @@ MIT
 [1]: https://github.com/tmpvar/jsdom
 [2]: http://en.wikipedia.org/wiki/Rapier
 [3]: https://github.com/neocotic/html.md
+[4]: https://github.com/bevacqua/woofmark

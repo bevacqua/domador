@@ -106,8 +106,10 @@ function parse (html, options) {
 }
 
 function Domador (html, options) {
-  this.html = html != null ? html : '';
+  this.html = html || '';
+  this.htmlIndex = 0;
   this.options = options || {};
+  this.markers = this.options.markers ? this.options.markers.sort(asc) : [];
   this.windowContext = windowContext(this.options);
   this.atLeft = this.noTrailingWhitespace = this.atP = true;
   this.buffer = this.childBuffer = '';
@@ -124,6 +126,7 @@ function Domador (html, options) {
   if (this.options.fencing === void 0) { this.options.fencing = false; }
   if (this.options.fencinglanguage === void 0) { this.options.fencinglanguage = noop; }
   if (this.options.transform === void 0) { this.options.transform = noop; }
+  function asc (a, b) { return a[0] - b[0]; }
 }
 
 Domador.prototype.append = function append (text) {
@@ -164,9 +167,7 @@ Domador.prototype.td = function td (header) {
   this.noTrailingWhitespace = false;
   return function after () {
     var spaces = header ? 0 : Math.max(0, this.tableCols[this.tableCol++] - this.childBuffer.length);
-    this.inPre = true;
-    this.output(' '.repeat(spaces + 1) + '|');
-    this.inPre = false;
+    this.append(' '.repeat(spaces + 1) + '|');
     this.noTrailingWhitespace = true;
   };
 };
@@ -260,9 +261,10 @@ Domador.prototype.parse = function parse () {
   }
   if (typeof this.html === 'string') {
     container = this.windowContext.document.createElement('div');
-    container.innerHTML = this.html;
+    container.innerHTML = this.htmlLeft = this.html;
   } else {
     container = this.html;
+    this.html = this.htmlLeft = container.innerHTML;
   }
   this.process(container);
   if (this.links.length) {
@@ -300,6 +302,47 @@ Domador.prototype.htmlTag = function htmlTag (type) {
   return this.outputLater('</' + type + '>');
 };
 
+Domador.prototype.advanceHtmlIndex = function advanceHtmlIndex (token) {
+  if (!this.markers.length === 0) {
+    return;
+  }
+
+  var re = new RegExp(token, 'ig');
+  var match = re.exec(this.htmlLeft);
+  if (!match) {
+    return;
+  }
+  var diff = re.lastIndex;
+  this.htmlIndex += diff;
+  this.htmlLeft = this.htmlLeft.slice(diff);
+
+};
+
+Domador.prototype.insertMarkers = function insertMarkers () {
+  while (this.markers.length && this.markers[0][0] <= this.htmlIndex) {
+    this.append(this.markers.shift()[1]);
+  }
+};
+
+Domador.prototype.interleaveMarkers = function interleaveMarkers (text) {
+  var marker;
+  var markerStart;
+  var lastMarkerStart = 0;
+  var bits = [];
+  var remainder;
+  while (this.markers.length && this.markers[0][0] <= this.htmlIndex + text.length) {
+    marker = this.markers.shift();
+    markerStart = Math.max(0, marker[0] - this.htmlIndex);
+    bits.push(
+      { text: text.slice(lastMarkerStart, markerStart) },
+      { marker: marker[1] }
+    );
+    lastMarkerStart = markerStart;
+  }
+  bits.push({ text: text.slice(lastMarkerStart) });
+  return bits;
+};
+
 Domador.prototype.process = function process (el) {
   var after;
   var base;
@@ -310,6 +353,7 @@ Domador.prototype.process = function process (el) {
   var summary;
   var title;
   var frameSrc;
+  var interleaved;
 
   if (!this.isVisible(el)) {
     return;
@@ -319,19 +363,37 @@ Domador.prototype.process = function process (el) {
     if (el.nodeValue.replace(/\n/g, '').length === 0) {
       return;
     }
+    interleaved = this.interleaveMarkers(el.nodeValue);
     if (this.inPre) {
-      return this.output(el.nodeValue);
+      return this.output(interleaved.map(maybeProcess()).join(''));
     }
     if (this.inCode) {
-      return this.output(processCode(el.nodeValue));
+      return this.output(interleaved.map(maybeProcess(processCode)).join(''));
     }
-    return this.output(processPlainText(el.nodeValue, el.parentElement && el.parentElement.tagName));
+    return this.output(interleaved.map(maybeProcess(processPlainText, el.parentElement && el.parentElement.tagName)).join(''));
+  }
+
+  function maybeProcess (fn, tagName) {
+    return function bitProcessor (bit) {
+      if (bit.marker) {
+        return bit.marker;
+      }
+      if (!fn) {
+        return bit.text;
+      }
+      return fn(bit.text, tagName);
+    }
   }
 
   if (el.nodeType !== this.windowContext.Node.ELEMENT_NODE) {
     return;
   }
 
+  if (this.lastElement) {
+    this.insertMarkers();
+    this.advanceHtmlIndex('<' + el.tagName);
+    this.advanceHtmlIndex('>');
+  }
   this.lastElement = el;
 
   var transformed = this.options.transform(el);
@@ -339,6 +401,7 @@ Domador.prototype.process = function process (el) {
     return this.output(transformed);
   }
   if (shallowTags.indexOf(el.tagName) !== -1) {
+    this.advanceHtmlIndex('\\/\\s?>');
     return;
   }
 
@@ -494,6 +557,8 @@ Domador.prototype.process = function process (el) {
     this.process(el.childNodes[i]);
   }
 
+  this.advanceHtmlIndex('<\\s?\\/\\s?' + el.tagName + '>');
+
   if (typeof after === 'function') {
     after = [after];
   }
@@ -514,10 +579,10 @@ Domador.prototype.tables = function tables (el) {
   }
   if (name === 'THEAD') {
     return function after () {
-      this.noTrailingWhitespace = false;
-      return this.output('|' + this.tableCols.reduce(function (th, tc) {
-        return th + '-'.repeat(tc + 2) + '|';
-      }, '') + '\n');
+      return this.append('|' + this.tableCols.reduce(reducer, '') + '\n');
+      function reducer (all, thLength) {
+        return all + '-'.repeat(thLength + 2) + '|';
+      }
     };
   }
   if (name === 'TH') {
@@ -530,8 +595,7 @@ Domador.prototype.tables = function tables (el) {
     this.output('|');
     this.noTrailingWhitespace = true;
     return function after () {
-      this.noTrailingWhitespace = false;
-      this.output('\n');
+      this.append('\n');
     };
   }
   if (name === 'TD') {
