@@ -303,7 +303,7 @@ Domador.prototype.htmlTag = function htmlTag (type) {
 };
 
 Domador.prototype.advanceHtmlIndex = function advanceHtmlIndex (token) {
-  if (!this.markers.length === 0) {
+  if (this.markers.length === 0) {
     return;
   }
 
@@ -315,7 +315,6 @@ Domador.prototype.advanceHtmlIndex = function advanceHtmlIndex (token) {
   var diff = re.lastIndex;
   this.htmlIndex += diff;
   this.htmlLeft = this.htmlLeft.slice(diff);
-
 };
 
 Domador.prototype.insertMarkers = function insertMarkers () {
@@ -329,7 +328,6 @@ Domador.prototype.interleaveMarkers = function interleaveMarkers (text) {
   var markerStart;
   var lastMarkerStart = 0;
   var bits = [];
-  var remainder;
   while (this.markers.length && this.markers[0][0] <= this.htmlIndex + text.length) {
     marker = this.markers.shift();
     markerStart = Math.max(0, marker[0] - this.htmlIndex);
@@ -382,7 +380,7 @@ Domador.prototype.process = function process (el) {
         return bit.text;
       }
       return fn(bit.text, tagName);
-    }
+    };
   }
 
   if (el.nodeType !== this.windowContext.Node.ELEMENT_NODE) {
