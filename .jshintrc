@@ -19,5 +19,6 @@
   "validthis": true,
   "indent": 2,
   "node": true,
-  "browser": true
+  "browser": true,
+  "esnext": true
 }

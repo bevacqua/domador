@@ -53,6 +53,22 @@ function fencinglanguage (el) {
 }
 ```
 
+##### `allowFrame`
+
+When set to a function, `allowFrame` receives the `src` attribute for an `<iframe>` and `domador` expects a boolean in return. If the return value is `true` then the `<iframe>` will be added to the Markdown output.
+
+```js
+domador(el, {
+  allowFrame: function (src) {
+    return src.indexOf('https://google.com/') === 0;
+  }
+});
+```
+
+##### `tables`
+
+Domador understands well-formed HTML `<table>` structures and spits out GitHub flavored Markdown tables. This functionality is enabled by default but you can turn it off by setting `tables` to `false`.
+
 ##### `transform`
 
 Allows you to take over the default transformation for any given DOM element. Ignore elements you don't want to override, and return Markdown for the ones you want to change. This method is executed on every single DOM element that's parsed by `domador`. The example below converts links that start with `@` into mentions like `@bevacqua` instead of traditional Markdown links like `[@bevacqua](/users/bevacqua)`. This is particularly useful to transform Markdown-generated HTML back into the original Markdown when your Markdown parser has special tokenizers or hooks.

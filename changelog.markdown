@@ -1,3 +1,8 @@
+# v2.2.0 Murder Central
+
+- Added `allowFrame` to enable cautious `<iframe>` support
+- Introduced support for GitHub flavored Markdown tables out the box
+
 # v2.1.3 Murky
 
 - Added support for server-side document-relative urls

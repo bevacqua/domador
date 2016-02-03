@@ -120,4 +120,88 @@ test('about absolute href', function (t) {
   t.equal(domador('<a href="/foo">foo</a>', { absolute: true, href: 'https://google.com/s/' }), '[foo][1]\n\n[1]: https://google.com/foo');
   t.equal(domador('<a href="foo">foo</a>', { absolute: true, href: 'https://google.com/s/' }), '[foo][1]\n\n[1]: https://google.com/s/foo');
   t.end();
-})
+});
+
+test('tables are ignored when tables turned off', function (t) {
+  t.equal(domador(`<table>
+    <thead>
+    <tr>
+    <th>colu1</th>
+    <th><strong>colum2</strong></th>
+    <th>column3</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td>foo</td>
+    <td><em>bar</em></td>
+    <td>baz</td>
+    </tr>
+    <tr>
+    <td>food</td>
+    <td>bars</td>
+    <td>bats</td>
+    </tr>
+    </tbody>
+    </table>`, { tables: false }),
+`colu1\n**colum2**\ncolumn3\nfoo\n_bar_\nbaz\nfood\nbars\nbats`);
+  t.end();
+});
+
+test('tables are parsed into gfm tables by default', function (t) {
+  t.equal(domador(`<table>
+    <thead>
+    <tr>
+    <th>colu1</th>
+    <th>colum2</th>
+    <th>column3</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td>foo</td>
+    <td>bar</td>
+    <td>baz</td>
+    </tr>
+    <tr>
+    <td>food</td>
+    <td>bars</td>
+    <td>bats</td>
+    </tr>
+    </tbody>
+    </table>`),
+`| colu1 | colum2 | column3 |
+|-------|--------|---------|
+| foo   | bar    | baz     |
+| food  | bars   | bats    |`);
+  t.end();
+});
+
+test('tables with complex content still get proper padding', function (t) {
+  t.equal(domador(`<table>
+    <thead>
+    <tr>
+    <th>colu1</th>
+    <th><strong>colum2</strong></th>
+    <th>column3</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td>foo</td>
+    <td><em>bar</em></td>
+    <td>baz</td>
+    </tr>
+    <tr>
+    <td>food</td>
+    <td>bars</td>
+    <td>bats</td>
+    </tr>
+    </tbody>
+    </table>`),
+`| colu1 | **colum2** | column3 |
+|-------|------------|---------|
+| foo   | _bar_      | baz     |
+| food  | bars       | bats    |`);
+  t.end();
+});

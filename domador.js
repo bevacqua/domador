@@ -1,5 +1,7 @@
 'use strict';
 
+require('string.prototype.repeat');
+
 var replacements = {
   '\\\\': '\\\\',
   '\\[': '\\[',
@@ -108,7 +110,7 @@ function Domador (html, options) {
   this.options = options || {};
   this.windowContext = windowContext(this.options);
   this.atLeft = this.noTrailingWhitespace = this.atP = true;
-  this.buffer = '';
+  this.buffer = this.childBuffer = '';
   this.exceptions = [];
   this.order = 1;
   this.listDepth = 0;
@@ -128,6 +130,7 @@ Domador.prototype.append = function append (text) {
   if (this.last != null) {
     this.buffer += this.last;
   }
+  this.childBuffer += text;
   return this.last = text;
 };
 
@@ -141,7 +144,7 @@ Domador.prototype.code = function code () {
   old = this.inCode;
   this.inCode = true;
   return (function(_this) {
-    return function() {
+    return function after () {
       return _this.inCode = old;
     };
   })(this);
@@ -152,6 +155,20 @@ Domador.prototype.li = function li () {
   result = this.inOrderedList ? (this.order++) + '. ' : '* ';
   result = padLeft(result, (this.listDepth - 1) * 2);
   return this.append(result);
+};
+
+Domador.prototype.td = function td (header) {
+  this.noTrailingWhitespace = false;
+  this.output(' ');
+  this.childBuffer = '';
+  this.noTrailingWhitespace = false;
+  return function after () {
+    var spaces = header ? 0 : Math.max(0, this.tableCols[this.tableCol++] - this.childBuffer.length);
+    this.inPre = true;
+    this.output(' '.repeat(spaces + 1) + '|');
+    this.inPre = false;
+    this.noTrailingWhitespace = true;
+  };
 };
 
 Domador.prototype.ol = function ol () {
@@ -165,7 +182,7 @@ Domador.prototype.ol = function ol () {
   this.order = 1;
   this.listDepth++;
   return (function(_this) {
-    return function() {
+    return function after () {
       _this.inOrderedList = inOrderedList;
       _this.order = order;
       return _this.listDepth--;
@@ -184,7 +201,7 @@ Domador.prototype.ul = function ul () {
   this.order = 1;
   this.listDepth++;
   return (function(_this) {
-    return function() {
+    return function after () {
       _this.inOrderedList = inOrderedList;
       _this.order = order;
       return _this.listDepth--;
@@ -210,7 +227,7 @@ Domador.prototype.output = function output (text) {
 
 Domador.prototype.outputLater = function outputLater (text) {
   return (function(self) {
-    return function () {
+    return function after () {
       return self.output(text);
     };
   })(this);
@@ -272,7 +289,7 @@ Domador.prototype.pre = function pre () {
   old = this.inPre;
   this.inPre = true;
   return (function(_this) {
-    return function() {
+    return function after () {
       return _this.inPre = old;
     };
   })(this);
@@ -285,8 +302,6 @@ Domador.prototype.htmlTag = function htmlTag (type) {
 
 Domador.prototype.process = function process (el) {
   var after;
-  var after1;
-  var after2;
   var base;
   var href;
   var i;
@@ -294,6 +309,7 @@ Domador.prototype.process = function process (el) {
   var suffix;
   var summary;
   var title;
+  var frameSrc;
 
   if (!this.isVisible(el)) {
     return;
@@ -412,16 +428,10 @@ Domador.prototype.process = function process (el) {
       if (this.options.fencing) {
         this.append('\n\n');
         this.output(['```', '\n'].join(this.options.fencinglanguage(el) || ''));
-        after1 = this.pre();
-        after2 = this.outputLater('\n```');
+        after = [this.pre(), this.outputLater('\n```')];
       } else {
-        after1 = this.pushLeft('    ');
-        after2 = this.pre();
+        after = [this.pushLeft('    '), this.pre()];
       }
-      after = function() {
-        after1();
-        return after2();
-      };
       break;
     case 'CODE':
     case 'SAMP':
@@ -429,12 +439,7 @@ Domador.prototype.process = function process (el) {
         break;
       }
       this.output('`');
-      after1 = this.code();
-      after2 = this.outputLater('`');
-      after = function() {
-        after1();
-        return after2();
-      };
+      after = [this.code(), this.outputLater('`')];
       break;
     case 'BLOCKQUOTE':
     case 'DD':
@@ -468,26 +473,68 @@ Domador.prototype.process = function process (el) {
       this.noTrailingWhitespace = true;
       after = this.outputLater(']' + suffix);
       break;
-    case 'FRAME':
     case 'IFRAME':
       try {
         if ((ref = el.contentDocument) != null ? ref.documentElement : void 0) {
           this.process(el.contentDocument.documentElement);
+        } else {
+          frameSrc = attr(el, 'src');
+          if (frameSrc && this.options.allowFrame && this.options.allowFrame(frameSrc)) {
+            this.output('<iframe src="' + frameSrc + '"></iframe>');
+          }
         }
       } catch (err) {
       }
       return;
-    case 'TR':
-      after = this.p;
-      break;
   }
+
+  after = this.tables(el) || after;
 
   for (i = 0; i < el.childNodes.length; i++) {
     this.process(el.childNodes[i]);
   }
 
-  if (after) {
-    return after.call(this);
+  if (typeof after === 'function') {
+    after = [after];
+  }
+  while (after && after.length) {
+    after.shift().call(this);
+  }
+};
+
+Domador.prototype.tables = function tables (el) {
+  if (this.options.tables === false) {
+    return;
+  }
+
+  var name = el.tagName;
+  if (name === 'TABLE') {
+    this.tableCols = [];
+    return;
+  }
+  if (name === 'THEAD') {
+    return function after () {
+      return this.output('|' + this.tableCols.reduce(function (th, tc) {
+        return th + '-'.repeat(tc + 2) + '|';
+      }, ''));
+    };
+  }
+  if (name === 'TH') {
+    return [function after () {
+      this.tableCols.push(this.childBuffer.length);
+    }, this.td(true)];
+  }
+  if (name === 'TR') {
+    this.tableCol = 0;
+    this.output('|');
+    this.noTrailingWhitespace = true;
+    return function after () {
+      this.output('\n');
+      this.noTrailingWhitespace = false;
+    };
+  }
+  if (name === 'TD') {
+    return this.td();
   }
 };
 
