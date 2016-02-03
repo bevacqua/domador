@@ -514,9 +514,10 @@ Domador.prototype.tables = function tables (el) {
   }
   if (name === 'THEAD') {
     return function after () {
+      this.noTrailingWhitespace = false;
       return this.output('|' + this.tableCols.reduce(function (th, tc) {
         return th + '-'.repeat(tc + 2) + '|';
-      }, ''));
+      }, '') + '\n');
     };
   }
   if (name === 'TH') {
@@ -529,8 +530,8 @@ Domador.prototype.tables = function tables (el) {
     this.output('|');
     this.noTrailingWhitespace = true;
     return function after () {
-      this.output('\n');
       this.noTrailingWhitespace = false;
+      this.output('\n');
     };
   }
   if (name === 'TD') {
