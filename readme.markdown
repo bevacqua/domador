@@ -93,10 +93,12 @@ The following example shows how `markers` could be used to preserve a text selec
 
 ```js
 domador('<strong>foo</strong>', {
-  markers: [[6, '[START]'], [10, '[END]']]
+  markers: [[5, '[START]'], [10, '[END]']]
 });
 // <- '**[START]fo[END]o**'
 ```
+
+<sub>Also note that, as shown in the example above, when a marker can't be placed in the output exactly where you asked for, it'll be cleanly placed nearby. In the above example, the `[START]` marker would've been placed _"somewhere inside"_ the opening `**` tag, but right after the opening tag finishes was preferred.</sub>
 
 # Tests
 

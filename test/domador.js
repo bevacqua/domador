@@ -208,6 +208,7 @@ test('tables with complex content still get proper padding', function (t) {
 
 test('domador understands markers', function (t) {
   t.equal(domador('<strong>foo</strong>', { markers: [[0, '[START]'], [0, '[END]']] }), '[START][END]**foo**');
+  t.equal(domador('<strong>foo</strong>', { markers: [[4, '[START]'], [10, '[END]']] }), '**[START]fo[END]o**');
   t.equal(domador('<strong>foo</strong>', { markers: [[6, '[START]'], [10, '[END]']] }), '**[START]fo[END]o**');
   t.equal(domador('<strong>foo</strong>', { markers: [[8, '[START]'], [10, '[END]']] }), '**[START]fo[END]o**');
   t.equal(domador('<code class="md-lang-js">foo</code>', { markers: [[8, '[START]'], [26, '[END]']] }), '`[START]f[END]oo`');
