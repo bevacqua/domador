@@ -99,6 +99,18 @@ function processCode (text) {
   return text.replace(/`/g, '\\`');
 }
 
+function outputMapper (fn, tagName) {
+  return function bitProcessor (bit) {
+    if (bit.marker) {
+      return bit.marker;
+    }
+    if (!fn) {
+      return bit.text;
+    }
+    return fn(bit.text, tagName);
+  };
+}
+
 function noop () {}
 
 function parse (html, options) {
@@ -363,41 +375,30 @@ Domador.prototype.process = function process (el) {
     }
     interleaved = this.interleaveMarkers(el.nodeValue);
     if (this.inPre) {
-      return this.output(interleaved.map(maybeProcess()).join(''));
+      return this.output(interleaved.map(outputMapper()).join(''));
     }
     if (this.inCode) {
-      return this.output(interleaved.map(maybeProcess(processCode)).join(''));
+      return this.output(interleaved.map(outputMapper(processCode)).join(''));
     }
-    return this.output(interleaved.map(maybeProcess(processPlainText, el.parentElement && el.parentElement.tagName)).join(''));
-  }
-
-  function maybeProcess (fn, tagName) {
-    return function bitProcessor (bit) {
-      if (bit.marker) {
-        return bit.marker;
-      }
-      if (!fn) {
-        return bit.text;
-      }
-      return fn(bit.text, tagName);
-    };
+    return this.output(interleaved.map(outputMapper(processPlainText, el.parentElement && el.parentElement.tagName)).join(''));
   }
 
   if (el.nodeType !== this.windowContext.Node.ELEMENT_NODE) {
     return;
   }
 
-  if (this.lastElement) {
+  if (this.lastElement) { // i.e not the auto-inserted <div> wrapper
     this.insertMarkers();
     this.advanceHtmlIndex('<' + el.tagName);
     this.advanceHtmlIndex('>');
+
+    var transformed = this.options.transform(el);
+    if (transformed !== void 0) {
+      return this.output(transformed);
+    }
   }
   this.lastElement = el;
 
-  var transformed = this.options.transform(el);
-  if (transformed !== void 0) {
-    return this.output(transformed);
-  }
   if (shallowTags.indexOf(el.tagName) !== -1) {
     this.advanceHtmlIndex('\\/\\s?>');
     return;

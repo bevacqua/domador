@@ -1,3 +1,7 @@
+# v2.3.1 Bubble Wrap
+
+- Fixed an issue where `domador` would pass the internal initial wrapper container to `transform` option
+
 # v2.3.0 Pin Market
 
 - Introduced support for `markers`, helpful in a variety of cases
