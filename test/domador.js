@@ -89,6 +89,13 @@ test('domador gets fencing languages', function (t) {
     ),
     'foo\n\n```js\nvar bar = 1;\nconsole.log(bar);\n```'
   );
+  t.equal(
+    domador(
+      '<p>foo</p><pre><code class="md-lang-js">var bar = 1;\nconsole.log(bar);</code></pre>',
+      { fencing: true, fencinglanguage: lang }
+    ),
+    'foo\n\n```js\nvar bar = 1;\nconsole.log(bar);\n```'
+  );
 
   function lang (el) {
     var match = el.className.match(/md-lang-((?:[^\s]|$)+)/);

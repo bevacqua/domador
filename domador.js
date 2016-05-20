@@ -490,7 +490,7 @@ Domador.prototype.process = function process (el) {
     case 'PRE':
       if (this.options.fencing) {
         this.append('\n\n');
-        this.output('```' + (this.options.fencinglanguage(el) || '') + '\n');
+        this.openCodeFence(el);
         after = [this.pre(), this.outputLater('\n```')];
       } else {
         after = [this.pushLeft('    '), this.pre()];
@@ -657,6 +657,15 @@ Domador.prototype.isVisible = function isVisible (el) {
     }
   }
   return visible;
+};
+
+Domador.prototype.openCodeFence = function openCodeFence (el) {
+  var fencinglanguage = this.options.fencinglanguage(el);
+  var child = el.childNodes[0];
+  if (!fencinglanguage && child && child.tagName === 'CODE') {
+    fencinglanguage = this.options.fencinglanguage(el.childNodes[0]);
+  }
+  this.output('```' + (fencinglanguage || '') + '\n');
 };
 
 module.exports = parse;
