@@ -177,6 +177,77 @@ test('tables are parsed into gfm tables by default', function (t) {
   t.end();
 });
 
+test('tables are parsed into gfm tables by default, after p, normally spaced', function (t) {
+  t.equal(domador(`
+    <p>Hi, there!</p>
+    <table>
+    <thead><tr>
+    <th>ones</th>
+    <th>twos</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td>one</td>
+    <td>two</td>
+    </tr>
+    </tbody>
+    </table>`),
+`Hi, there!
+
+| ones | twos |
+|------|------|
+| one  | two  |`);
+  t.end();
+});
+
+test('tables are parsed into gfm tables by default, after p, without extra spaces', function (t) {
+  t.equal(domador(`
+    <p>Hi, there!</p>
+<table>
+<thead><tr>
+    <th>ones</th>
+    <th>twos</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td>one</td>
+    <td>two</td>
+    </tr>
+    </tbody>
+    </table>`),
+`Hi, there!
+
+| ones | twos |
+|------|------|
+| one  | two  |`);
+  t.end();
+});
+
+test('tables are parsed into gfm tables separated from subsequent elements by only one newline', function (t) {
+  t.equal(domador(`<table>
+    <thead><tr>
+    <th>ones</th>
+    <th>twos</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td>one</td>
+    <td>two</td>
+    </tr>
+    </tbody>
+    </table>
+<p>Hi, there!</p>`),
+`| ones | twos |
+|------|------|
+| one  | two  |
+
+Hi, there!`);
+  t.end();
+});
+
 test('tables with complex content still get proper padding', function (t) {
   t.equal(domador(`<table>
     <thead>
@@ -212,5 +283,13 @@ test('domador understands markers', function (t) {
   t.equal(domador('<strong>foo</strong>', { markers: [[6, '[START]'], [10, '[END]']] }), '**[START]fo[END]o**');
   t.equal(domador('<strong>foo</strong>', { markers: [[8, '[START]'], [10, '[END]']] }), '**[START]fo[END]o**');
   t.equal(domador('<code class="md-lang-js">foo</code>', { markers: [[8, '[START]'], [26, '[END]']] }), '`[START]f[END]oo`');
+  t.end();
+});
+
+test('domador converts double newlines into single newlines', function (t) {
+  t.equal(domador('<p>Hello</p>\n<p>Hello</p>'),       'Hello\n\nHello');
+  t.equal(domador('<p>Hello</p>\n\n<p>Hello</p>'),     'Hello\n\nHello');
+  t.equal(domador('<p>Hello</p>\n\n\n<p>Hello</p>'),   'Hello\n\nHello');
+  t.equal(domador('<p>Hello</p>\n\n\n\n<p>Hello</p>'), 'Hello\n\nHello');
   t.end();
 });
