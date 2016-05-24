@@ -295,6 +295,7 @@ Domador.prototype.parse = function parse () {
     }
   }
   this.append('');
+  this.buffer = this.buffer.replace(/\n{3,}/g, '\n\n')
   return this.buffer = trim(this.buffer);
 };
 
@@ -573,6 +574,7 @@ Domador.prototype.tables = function tables (el) {
 
   var name = el.tagName;
   if (name === 'TABLE') {
+    this.append('\n\n');
     this.tableCols = [];
     return;
   }
