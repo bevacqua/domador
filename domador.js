@@ -371,7 +371,7 @@ Domador.prototype.process = function process (el) {
   }
 
   if (el.nodeType === this.windowContext.Node.TEXT_NODE) {
-    if (el.nodeValue.replace(/\n/g, '').length === 0) {
+    if (!this.inPre && el.nodeValue.replace(/\n/g, '').length === 0) {
       return;
     }
     interleaved = this.interleaveMarkers(el.nodeValue);
@@ -490,7 +490,7 @@ Domador.prototype.process = function process (el) {
     case 'PRE':
       if (this.options.fencing) {
         this.append('\n\n');
-        this.output(['```', '\n'].join(this.options.fencinglanguage(el) || ''));
+        this.output('```' + (this.options.fencinglanguage(el) || '') + '\n');
         after = [this.pre(), this.outputLater('\n```')];
       } else {
         after = [this.pushLeft('    '), this.pre()];

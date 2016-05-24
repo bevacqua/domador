@@ -1,3 +1,7 @@
+# v2.4.1 Pre-order Today
+
+- Fixed an issue where `domador` wouldn't preserve whitespace in code blocks
+
 # v2.4.0 Tableau
 
 - Fixed an issue where `domador` would mess up tables that came after lists
