@@ -1,3 +1,8 @@
+# v2.4.0 Tableau
+
+- Fixed an issue where `domador` would mess up tables that came after lists
+- List item output defaults to a prefix of `'- '` instead of the old `'* '` behavior
+
 # v2.3.1 Bubble Wrap
 
 - Fixed an issue where `domador` would pass the internal initial wrapper container to `transform` option

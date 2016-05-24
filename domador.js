@@ -167,7 +167,7 @@ Domador.prototype.code = function code () {
 
 Domador.prototype.li = function li () {
   var result;
-  result = this.inOrderedList ? (this.order++) + '. ' : '* ';
+  result = this.inOrderedList ? (this.order++) + '. ' : '- ';
   result = padLeft(result, (this.listDepth - 1) * 2);
   return this.append(result);
 };

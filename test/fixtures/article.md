@@ -72,18 +72,18 @@ Build up from the pillars of the web, instead of doing everything backwards and 
 
 Here's a checklist you might need.
 
-* HTML first, get meaningful markup to the human being as soon as possible
-* Deliver some CSS, [inline critical path CSS][4] _(hey, that one came from Google, too!)_
-* Defer the rest of the CSS until `onload` through JavaScript, but provide a fallback using `<noscript>`
-* Defer below the fold images
-* Defer font loading
-* Defer all the JavaScript
-* **Never again rely on client-side rendering alone**
-* Prioritize content delivery
-* Cache static assets
-* Experiment with caching dynamic assets
-* Cache database queries
-* **Cache all the things**
+- HTML first, get meaningful markup to the human being as soon as possible
+- Deliver some CSS, [inline critical path CSS][4] _(hey, that one came from Google, too!)_
+- Defer the rest of the CSS until `onload` through JavaScript, but provide a fallback using `<noscript>`
+- Defer below the fold images
+- Defer font loading
+- Defer all the JavaScript
+- **Never again rely on client-side rendering alone**
+- Prioritize content delivery
+- Cache static assets
+- Experiment with caching dynamic assets
+- Cache database queries
+- **Cache all the things**
 
 Also, use `<form>` elements first, then build some AJAX on top of that. No! It's not for the no-JavaScript crazies. If the JavaScript is still loading, your site will be useless unless you have `<form>` elements in place to guarantee the functionality will be available. Some people just have to deal with slow mobile connections, embrace that. You can [use Google Chrome to emulate mobile connections][13], for example.
 

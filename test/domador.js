@@ -248,6 +248,28 @@ Hi, there!`);
   t.end();
 });
 
+
+test('tables that come right after a list item work as expected', function (t) {
+  t.equal(domador(`<ul><li>foo</li></ul><table>
+    <thead><tr>
+    <th>ones</th>
+    <th>twos</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td>one</td>
+    <td>two</td>
+    </tr>
+    </tbody>
+    </table>`),
+`- foo
+
+| ones | twos |
+|------|------|
+| one  | two  |`);
+  t.end();
+});
 test('tables with complex content still get proper padding', function (t) {
   t.equal(domador(`<table>
     <thead>
