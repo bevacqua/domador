@@ -42,7 +42,7 @@ The western art of combat with [rapiers][2] or rapier-like swords. It can also b
 
 ##### `fencinglanguage`
 
-If `fencing` is enabled, `fencinglanguage` can be a `function` that will run on every `pre` element and returns the appropriate language in the fence.
+If `fencing` is enabled, `fencinglanguage` can be a `function` that will run on every `<pre>` element and returns the appropriate language in the fence. If the `<pre>` element contains a `<code>` element as its first child, `fencinglanguage` will be executed for that element as well in search of a match.
 
 If nothing is returned, a language won't be assigned to the fence. The example below returns fence languages according to a `md-lang-{language}` class found on the `pre` element.
 
