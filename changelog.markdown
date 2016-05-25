@@ -1,3 +1,7 @@
+# v2.4.2 Rosetta Stone
+
+- Domador now detects code block languages using `fencinglanguage` in `<code>` in addition to `<pre>` tags
+
 # v2.4.1 Pre-order Today
 
 - Fixed an issue where `domador` wouldn't preserve whitespace in code blocks
