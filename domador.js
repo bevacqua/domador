@@ -41,6 +41,9 @@ var shallowTags = [
 var paragraphTags = [
   'ADDRESS', 'ARTICLE', 'ASIDE', 'DIV', 'FIELDSET', 'FOOTER', 'HEADER', 'NAV', 'P', 'SECTION'
 ];
+var blockTags = [
+  'ADDRESS', 'ARTICLE', 'ASIDE', 'DIV', 'FIELDSET', 'FOOTER', 'HEADER', 'NAV', 'P', 'SECTION', 'UL', 'LI', 'BLOCKQUOTE', 'BR'
+];
 var windowContext = require('./virtualWindowContext');
 
 function replacer (result, key) {
@@ -128,7 +131,7 @@ function Domador (html, options) {
   this.exceptions = [];
   this.order = 1;
   this.listDepth = 0;
-  this.inCode = this.inPre = this.inOrderedList = false;
+  this.inCode = this.inPre = this.inOrderedList = this.inTable = false;
   this.last = null;
   this.left = '\n';
   this.links = [];
@@ -370,12 +373,16 @@ Domador.prototype.process = function process (el) {
     return;
   }
 
+  if ((this.inTable || this.inPre) && blockTags.indexOf(el.tagName) !== -1) {
+    return this.output(el.outerHTML);
+  }
+
   if (el.nodeType === this.windowContext.Node.TEXT_NODE) {
     if (!this.inPre && el.nodeValue.replace(/\n/g, '').length === 0) {
       return;
     }
     interleaved = this.interleaveMarkers(el.nodeValue);
-    if (this.inPre) {
+    if (this.inPre || this.inTable) {
       return this.output(interleaved.map(outputMapper()).join(''));
     }
     if (this.inCode) {
@@ -574,9 +581,16 @@ Domador.prototype.tables = function tables (el) {
 
   var name = el.tagName;
   if (name === 'TABLE') {
+    var oldInTable;
+    oldInTable = this.inTable;
+    this.inTable = true;
     this.append('\n\n');
     this.tableCols = [];
-    return;
+    return (function(_this) {
+      return function after () {
+        return _this.inTable = oldInTable;
+      };
+    })(this);
   }
   if (name === 'THEAD') {
     return function after () {
