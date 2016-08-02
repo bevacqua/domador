@@ -26,6 +26,7 @@ test('domador gets <mark> right', function (t) {
   t.equal(domador('<mark>foo</mark>'), '<mark>foo</mark>');
   t.equal(domador('<mark>foo bar baz</mark>'), '<mark>foo bar baz</mark>');
   t.equal(domador('<mark>foo <em>bar baz</em> </mark>'), '<mark>foo _bar baz_ </mark>');
+  t.equal(domador('<table><thead><tr><th>col0</th></tr></thead><tbody><tr><td><mark><em>foo</em></mark></td></tr></tbody></table>'), '| col0 |\n|------|\n| <mark>_foo_</mark> |');
   t.end();
 });
 
@@ -69,6 +70,8 @@ test('end-heading get the appropriate treatment', function (t) {
 
 test('domador gets fencing', function (t) {
   t.equal(domador('<p>foo</p><pre><code>var bar = 1</code></pre>', { fencing: true }), 'foo\n\n```\nvar bar = 1\n```');
+  t.equal(domador('<p>foo</p><pre><code><p>bar</p></code></pre>', { fencing: true }), 'foo\n\n```\n<p>bar</p>\n```');
+  t.equal(domador('<pre><code><ul>\n  <li>foo</li>\n  <li>bar</li>\n</ul></code></pre>', { fencing: true }), '```\n<ul>\n  <li>foo</li>\n  <li>bar</li>\n</ul>\n```');
   t.equal(domador('<p>foo</p><pre><code>var bar = 1</code></pre><p>baz</p>', { fencing: true }), 'foo\n\n```\nvar bar = 1\n```\n\nbaz');
   t.equal(domador('<p>foo</p><pre><code>var bar = 1;\nconsole.log(bar);</code></pre>', { fencing: true }), 'foo\n\n```\nvar bar = 1;\nconsole.log(bar);\n```');
   t.equal(domador('<p>foo</p><pre><code><span class="md-code-comment">// Code could go here</span>\n<span class="md-code-keyword">var</span> myVariable = <span class="md-code-number">4</span>;\n\n</code></pre>', { fencing: true }), 'foo\n\n```\n// Code could go here\nvar myVariable = 4;\n\n```');
@@ -262,7 +265,6 @@ Hi, there!`);
   t.end();
 });
 
-
 test('tables that come right after a list item work as expected', function (t) {
   t.equal(domador(`<ul><li>foo</li></ul><table>
     <thead><tr>
@@ -284,6 +286,7 @@ test('tables that come right after a list item work as expected', function (t) {
 | one  | two  |`);
   t.end();
 });
+
 test('tables with complex content still get proper padding', function (t) {
   t.equal(domador(`<table>
     <thead>
@@ -297,7 +300,7 @@ test('tables with complex content still get proper padding', function (t) {
     <tr>
     <td>foo</td>
     <td><em>bar</em></td>
-    <td>baz</td>
+    <td><span>baz</span></td>
     </tr>
     <tr>
     <td>food</td>
@@ -310,6 +313,32 @@ test('tables with complex content still get proper padding', function (t) {
 |-------|------------|---------|
 | foo   | _bar_      | baz     |
 | food  | bars       | bats    |`);
+  t.end();
+});
+
+test('tables preserve html block or br elements in cells', function (t) {
+  t.equal(domador(`<table>
+    <thead>
+    <tr>
+    <th>column1 with a very long header</th>
+    <th>column2</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td><div>foo</div></td>
+    <td>bar<br></td>
+    </tr>
+    <tr>
+    <td><ul><li>A list of one</li></ul></td>
+    <td>bars</td>
+    </tr>
+    </tbody>
+    </table>`),
+`| column1 with a very long header | column2 |
+|---------------------------------|---------|
+| <div>foo</div>                  | bar<br> |
+| <ul><li>A list of one</li></ul> | bars    |`);
   t.end();
 });
 
