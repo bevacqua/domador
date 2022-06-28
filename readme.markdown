@@ -100,6 +100,13 @@ domador('<strong>foo</strong>', {
 
 <sub>Also note that, as shown in the example above, when a marker can't be placed in the output exactly where you asked for, it'll be cleanly placed nearby. In the above example, the `[START]` marker would've been placed _"somewhere inside"_ the opening `**` tag, but right after the opening tag finishes was preferred.</sub>
 
+##### `pad_ol_li` and `pad_ul_li`
+
+Specify the number of spaces to pad nested lists with (default: 2). This allows variants of Markdown with strict requirements (especially on ordered list indentation) to be accomodated.
+
+`pad_ol_li` overrides the default for ordered lists and `pad_ul_li` overrides the default for unordered lists.
+
+
 # Tests
 
 Read the unit tests for examples of expected output and their inputs. Run unit tests using the command below.

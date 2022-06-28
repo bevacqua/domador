@@ -137,6 +137,8 @@ function Domador (html, options) {
   this.links = [];
   this.linkMap = {};
   this.unhandled = {};
+  this.pad_ol_li = this.options.pad_ol_li || 2;
+  this.pad_ul_li = this.options.pad_ul_li || 2;
   if (this.options.absolute === void 0) { this.options.absolute = false; }
   if (this.options.fencing === void 0) { this.options.fencing = false; }
   if (this.options.fencinglanguage === void 0) { this.options.fencinglanguage = noop; }
@@ -171,7 +173,8 @@ Domador.prototype.code = function code () {
 Domador.prototype.li = function li () {
   var result;
   result = this.inOrderedList ? (this.order++) + '. ' : '- ';
-  result = padLeft(result, (this.listDepth - 1) * 2);
+  var padTimes = this.inOrderedList ? this.pad_ol_li : this.pad_ul_li;
+  result = padLeft(result, (this.listDepth - 1) * padTimes);
   return this.append(result);
 };
 
