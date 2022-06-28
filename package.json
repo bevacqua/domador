@@ -1,6 +1,6 @@
 {
   "name": "domador",
-  "version": "2.4.4",
+  "version": "2.4.5",
   "description": "Dependency-free and lean DOM parser that outputs Markdown",
   "main": "domador.js",
   "scripts": {
@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "browserify": "^13.3.0",
-    "jshint": "^2.9.4",
+    "jshint": "^2.13.4",
     "tape": "^4.6.3",
     "uglify-js": "^2.7.5",
     "watchify": "^3.8.0"
